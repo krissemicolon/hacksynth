@@ -1,11 +1,22 @@
+use iced::{Settings, Sandbox, window};
+use ui::App;
+
 mod ui;
+mod styling;
+mod util;
 
 pub fn main() {
-    let host = cpal::default_host();
-    let device = host
-        .default_output_device()
-        .expect("failed to find a default output device");
-    let config = device.default_output_config().unwrap();
+    let settings = Settings {
+        window: window::Settings {
+            size: (650, 465),
+            resizable: false,
+            decorations: true,
+            //icon: todo!(), TODO: maybe icon?
+            ..window::Settings::default()
+        },
+        // default_font: todo!(), TODO: Roboto font
+        ..Settings::default()
+    };
 
-    ui::App::run(Settings::default().unwrap());
+    App::run(settings).unwrap();
 }
