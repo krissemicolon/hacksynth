@@ -8,7 +8,6 @@ impl container::StyleSheet for OscillatorsContainer {
         container::Style {
             text_color: None,
             background: Some(Background::Color(util::hex_to_color("#333333").unwrap())),
-            border_color: Color::BLACK,
             ..container::Style::default()
         }
     }
