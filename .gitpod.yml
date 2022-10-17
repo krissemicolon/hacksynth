@@ -1,0 +1,10 @@
+checkoutLocation: src/github.com/krissemicolon/hacksynth
+workspaceLocation: /
+image:
+  file: Dockerfile
+ports:
+  - port: 6080
+    protocol: "http"
+tasks:
+  - init: cargo build
+    command: cargo watch -x run
