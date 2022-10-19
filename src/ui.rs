@@ -1,5 +1,5 @@
-use iced::{Alignment, Column, Container, Element, Sandbox, Length, Row};
-use iced_audio::{Normal, VSlider, v_slider, LogDBRange, tick_marks};
+use iced::{image, svg, Alignment, Column, Container, Element, Image, Length, Row, Sandbox, Svg};
+use iced_audio::{tick_marks, v_slider, LogDBRange, Normal, VSlider};
 
 use crate::styling;
 
@@ -29,16 +29,10 @@ impl Sandbox for App {
 
         App {
             fader_range,
-            fader_state: v_slider::State::new(
-                fader_range.default_normal_param(),
-            ),
-            fader_state2: v_slider::State::new(
-                fader_range.default_normal_param(),
-            ),
-            fader_state3: v_slider::State::new(
-                fader_range.default_normal_param(),
-            ),
-            
+            fader_state: v_slider::State::new(fader_range.default_normal_param()),
+            fader_state2: v_slider::State::new(fader_range.default_normal_param()),
+            fader_state3: v_slider::State::new(fader_range.default_normal_param()),
+
             // center_tick_mark: tick_marks::Group::center(tick_marks::Tier::Two),
             center_tick_mark: tick_marks::Group::center(tick_marks::Tier::Two),
         }
@@ -62,46 +56,58 @@ impl Sandbox for App {
             .tick_marks(&self.center_tick_mark);
 
         let oscillators_container = Container::new(
-                Column::new()
-                    .spacing(20)
-                    .padding(20)
-                    .push(fader_widget)
-            )
-            .align_x(iced::alignment::Horizontal::Center)
-            .width(Length::Units(214))
-            .height(Length::Units(465))
-            .max_width(214)
-            .max_height(465)
-            .style(styling::OscillatorsContainer);
+            Column::new()
+                .spacing(20)
+                .padding(20)
+                .push(fader_widget)
+                .push(Image::new(image::Handle::from_path(format!(
+                    "{}/assets/oscillators_text.png",
+                    env!("CARGO_MANIFEST_DIR")
+                )))),
+        )
+        .align_x(iced::alignment::Horizontal::Center)
+        .width(Length::Units(214))
+        .height(Length::Units(465))
+        .max_width(214)
+        .max_height(465)
+        .style(styling::OscillatorsContainer);
 
         let filters_container = Container::new(
-                Column::new()
-                    .spacing(20)
-                    .padding(20)
-                    .align_items(Alignment::Center)
-                    .push(fader_widget2)
-            )
-            .align_x(iced::alignment::Horizontal::Center)
-            .width(Length::Units(214))
-            .height(Length::Units(465))
-            .max_width(214)
-            .max_height(465)
-            .style(styling::FiltersContainer);
+            Column::new()
+                .spacing(20)
+                .padding(20)
+                .align_items(Alignment::Center)
+                .push(fader_widget2)
+                .push(Image::new(image::Handle::from_path(format!(
+                    "{}/assets/filters_text.png",
+                    env!("CARGO_MANIFEST_DIR")
+                )))),
+        )
+        .align_x(iced::alignment::Horizontal::Center)
+        .width(Length::Units(214))
+        .height(Length::Units(465))
+        .max_width(214)
+        .max_height(465)
+        .style(styling::FiltersContainer);
 
         let lfos_container = Container::new(
-                Column::new()
-                    .spacing(20)
-                    .padding(20)
-                    .align_items(Alignment::Center)
-                    .push(fader_widget3)
-            )
-            .align_x(iced::alignment::Horizontal::Center)
-            .style(styling::LFOsContainer)
-            .width(Length::Units(214))
-            .height(Length::Units(465))
-            .max_width(214)
-            .max_height(465)
-            .style(styling::LFOsContainer);
+            Column::new()
+                .spacing(20)
+                .padding(20)
+                .align_items(Alignment::Center)
+                .push(fader_widget3)
+                .push(Image::new(image::Handle::from_path(format!(
+                    "{}/assets/lfos_text.png",
+                    env!("CARGO_MANIFEST_DIR")
+                )))),
+        )
+        .align_x(iced::alignment::Horizontal::Center)
+        .style(styling::LFOsContainer)
+        .width(Length::Units(214))
+        .height(Length::Units(465))
+        .max_width(214)
+        .max_height(465)
+        .style(styling::LFOsContainer);
 
         // Push widgets into the iced DOM
         let content: Element<_> = Row::new()
