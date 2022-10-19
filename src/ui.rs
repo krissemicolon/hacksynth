@@ -1,4 +1,4 @@
-use iced::{image, svg, Alignment, Column, Container, Element, Image, Length, Row, Sandbox, Svg};
+use iced::{image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox};
 use iced_audio::{tick_marks, v_slider, LogDBRange, Normal, VSlider};
 
 use crate::styling;
