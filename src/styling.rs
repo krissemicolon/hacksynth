@@ -1,4 +1,4 @@
-use iced::{container, Background, Color};
+use iced::{container, Background};
 
 use crate::util;
 
