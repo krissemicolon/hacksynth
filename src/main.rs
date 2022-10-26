@@ -1,11 +1,15 @@
 use iced::{Settings, Sandbox, window};
-use ui::App;
+use app::App;
 
-mod ui;
+mod app;
+mod audio;
 mod styling;
 mod util;
+mod device;
 
 pub fn main() {
+    env_logger::init();
+
     let settings = Settings {
         window: window::Settings {
             size: (650, 465),
@@ -15,7 +19,7 @@ pub fn main() {
             ..window::Settings::default()
         },
         // default_font: todo!(), TODO: Roboto font
-        ..Settings::default()
+        ..iced::Settings::default()
     };
 
     App::run(settings).unwrap();

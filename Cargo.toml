@@ -8,3 +8,7 @@ iced = { version = "0.4.2", features = ["image"] }
 iced_audio = "0.8"
 fundsp = "0.9.0"
 cpal = "0.14.0"
+anyhow = "1.0.66"
+midir = "0.8.0"
+log = "0.4.17"
+env_logger = "0.9.1"

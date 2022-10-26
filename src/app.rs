@@ -1,6 +1,7 @@
 use iced::{image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox};
 use iced_audio::{tick_marks, v_slider, LogDBRange, Normal, VSlider};
 
+use crate::audio::Audio;
 use crate::styling;
 
 #[derive(Debug, Clone)]
@@ -9,6 +10,8 @@ pub enum Message {
 }
 
 pub struct App {
+    audio: Audio,
+
     fader_range: LogDBRange,
     fader_state: v_slider::State,
     fader_state2: v_slider::State,
@@ -28,12 +31,13 @@ impl Sandbox for App {
         let fader_range = LogDBRange::new(-12.0, 12.0, 0.5.into());
 
         App {
+            audio: Audio::new(),
+
             fader_range,
             fader_state: v_slider::State::new(fader_range.default_normal_param()),
             fader_state2: v_slider::State::new(fader_range.default_normal_param()),
             fader_state3: v_slider::State::new(fader_range.default_normal_param()),
 
-            // center_tick_mark: tick_marks::Group::center(tick_marks::Tier::Two),
             center_tick_mark: tick_marks::Group::center(tick_marks::Tier::Two),
         }
     }
