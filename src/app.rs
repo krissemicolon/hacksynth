@@ -1,5 +1,5 @@
 use iced::{image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox};
-use iced_audio::{tick_marks, v_slider, LogDBRange, Normal, VSlider};
+use iced_audio::{tick_marks, v_slider, LogDBRange, Normal, VSlider, knob, FloatRange, Knob};
 
 use crate::audio::Audio;
 use crate::styling;
@@ -7,10 +7,14 @@ use crate::styling;
 #[derive(Debug, Clone)]
 pub enum Message {
     VSliderDB(Normal),
+    Float(Normal),
 }
 
 pub struct App {
     audio: Audio,
+
+    detune_knob_range: FloatRange,
+    detune_knob_state: knob::State,
 
     fader_range: LogDBRange,
     fader_state: v_slider::State,
@@ -29,9 +33,13 @@ impl Sandbox for App {
 
     fn new() -> App {
         let fader_range = LogDBRange::new(-12.0, 12.0, 0.5.into());
+        let detune_knob_range = FloatRange::default_bipolar();
 
         App {
             audio: Audio::new(),
+
+            detune_knob_range,
+            detune_knob_state: knob::State::new(detune_knob_range.default_normal_param()),
 
             fader_range,
             fader_state: v_slider::State::new(fader_range.default_normal_param()),
@@ -53,6 +61,10 @@ impl Sandbox for App {
                 let value = self.fader_range.unmap_to_value(normal);
                 println!("Hacksynth Value: {value}");
             }
+            Message::Float(normal) => {
+                let value = self.detune_knob_range.unmap_to_value(normal);
+                println!("detune 1 {value}")
+            }
         }
     }
 
@@ -63,6 +75,15 @@ impl Sandbox for App {
             .tick_marks(&self.center_tick_mark);
         let fader_widget3 = VSlider::new(&mut self.fader_state3, Message::VSliderDB)
             .tick_marks(&self.center_tick_mark);
+
+        let detune_knob = Knob::new(&mut self.detune_knob_state, Message::Float, || None, || None);
+
+        // let oscillator = Container::new(
+        //     Column::new()
+        //         .align_items(Alignment::Center)
+        //         .push()
+        // )
+        // .style(styling::OscillatorContainer);
 
         let oscillators_container = Container::new(Container::new(
             Row::new()
