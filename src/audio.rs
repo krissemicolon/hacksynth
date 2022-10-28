@@ -1,5 +1,6 @@
 use crate::device;
 use crossbeam_queue::SegQueue;
+use fundsp::{hacker::sine_hz, prelude::*};
 use midi_msg::MidiMsg;
 use midir::{MidiInput, MidiInputPort};
 use std::sync::Arc;
@@ -7,6 +8,7 @@ use std::thread;
 
 pub struct Audio {
     pub midi_queue: Arc<SegQueue<MidiMsg>>,
+    oscillators: Vec<Oscillator>,
 }
 
 impl Audio {
@@ -16,12 +18,27 @@ impl Audio {
 
         let audio = Audio {
             midi_queue: midi_queue.clone(),
+            oscillators: vec![Oscillator::new()],
         };
 
         test_output(midi_queue.clone());
         listen_for_midi(midi_in.unwrap(), midi_queue);
 
         audio
+    }
+}
+
+pub struct Oscillator {
+    detune: f64,
+}
+
+impl Oscillator {
+    pub fn new() -> Oscillator {
+        Oscillator { detune: 0.0 }
+    }
+
+    pub fn sound(freq: f64) -> An<Pipe<f64, Constant<U1, f64>, Sine<f64>>> {
+        sine_hz(freq)
     }
 }
 
