@@ -2,7 +2,7 @@ use anyhow::bail;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, Sample, SampleFormat, StreamConfig};
 use crossbeam_queue::SegQueue;
-use fundsp::hacker::{adsr_live, midi_hz, triangle, var};
+use fundsp::hacker::{adsr_live, midi_hz, saw, var};
 use fundsp::prelude::{An, AudioUnit64, Tag, Var};
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use midir::{Ignore, MidiInput, MidiInputConnection};
@@ -104,7 +104,7 @@ fn create_sound(
     let pitch_bend = var(PITCH_TAG, 1.0);
     Box::new(
         pitch * pitch_bend
-            >> triangle() * adsr_live(0.1, 0.2, 0.4, 0.2, releasing, finished) * volume * 2.0,
+            >> saw() * adsr_live(0.1, 0.2, 0.4, 0.2, releasing, finished) * volume * 2.0,
     )
 }
 
