@@ -59,16 +59,21 @@ impl Sandbox for App {
         let fader_widget3 = VSlider::new(&mut self.fader_state3, Message::VSliderDB)
             .tick_marks(&self.center_tick_mark);
 
-        let oscillators_container = Container::new(
-            Column::new()
-                .spacing(20)
-                .padding(20)
-                .push(fader_widget)
+        let oscillators_container = Container::new(Container::new(
+            Row::new()
+                .align_items(Alignment::Center)
                 .push(Image::new(image::Handle::from_path(format!(
                     "{}/assets/oscillators_text.png",
                     env!("CARGO_MANIFEST_DIR")
-                )))),
-        )
+                ))))
+                .push(
+                    Column::new()
+                        .spacing(20)
+                        .padding(20)
+                        .align_items(Alignment::Center)
+                        .push(fader_widget),
+                ),
+        ))
         .align_x(iced::alignment::Horizontal::Center)
         .width(Length::Units(214))
         .height(Length::Units(465))
@@ -76,17 +81,21 @@ impl Sandbox for App {
         .max_height(465)
         .style(styling::OscillatorsContainer);
 
-        let filters_container = Container::new(
-            Column::new()
-                .spacing(20)
-                .padding(20)
+        let filters_container = Container::new(Container::new(
+            Row::new()
                 .align_items(Alignment::Center)
-                .push(fader_widget2)
                 .push(Image::new(image::Handle::from_path(format!(
                     "{}/assets/filters_text.png",
                     env!("CARGO_MANIFEST_DIR")
-                )))),
-        )
+                ))))
+                .push(
+                    Column::new()
+                        .spacing(20)
+                        .padding(20)
+                        .align_items(Alignment::Center)
+                        .push(fader_widget2),
+                ),
+        ))
         .align_x(iced::alignment::Horizontal::Center)
         .width(Length::Units(214))
         .height(Length::Units(465))
@@ -94,17 +103,21 @@ impl Sandbox for App {
         .max_height(465)
         .style(styling::FiltersContainer);
 
-        let lfos_container = Container::new(
-            Column::new()
-                .spacing(20)
-                .padding(20)
+        let lfos_container = Container::new(Container::new(
+            Row::new()
                 .align_items(Alignment::Center)
-                .push(fader_widget3)
                 .push(Image::new(image::Handle::from_path(format!(
                     "{}/assets/lfos_text.png",
                     env!("CARGO_MANIFEST_DIR")
-                )))),
-        )
+                ))))
+                .push(
+                    Column::new()
+                        .spacing(20)
+                        .padding(20)
+                        .align_items(Alignment::Center)
+                        .push(fader_widget3),
+                ),
+        ))
         .align_x(iced::alignment::Horizontal::Center)
         .style(styling::LFOsContainer)
         .width(Length::Units(214))
