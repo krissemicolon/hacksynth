@@ -1,6 +1,6 @@
-use midir::{MidiInput, MidiInputPorts};
+use midir::{MidiInput, MidiInputPort};
 
-pub fn get_midi_devices() -> Option<(MidiInput, MidiInputPorts)> {
+pub fn get_midi_device<'a>() -> Option<MidiInputPort> {
     let midi_in: MidiInput = match MidiInput::new("midir reading input") {
         Ok(midi_in) => midi_in,
         Err(_) => return None,
@@ -11,5 +11,5 @@ pub fn get_midi_devices() -> Option<(MidiInput, MidiInputPorts)> {
         println!("midi devices: {}", midi_in.port_name(&port).unwrap());
     }
 
-    Some((midi_in, midi_in_ports))
+    Some(midi_in_ports[0].clone())
 }
