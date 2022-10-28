@@ -2,7 +2,6 @@ use app::App;
 use crossbeam_queue::SegQueue;
 use iced::{window, Sandbox, Settings};
 use std::sync::Arc;
-use std::thread;
 
 mod app;
 mod audio;
@@ -14,11 +13,9 @@ fn main() {
     env_logger::init();
 
     let messages = Arc::new(SegQueue::new());
-    let io_thread = thread::spawn(move || {
-        if let Ok(_connection) = midi::run(messages.clone()) {
-            audio::test_output(messages);
-        }
-    });
+    // This has to be retained to ensure the connection is not dropped
+    let _connection = midi::run(messages.clone()).unwrap();
+    midi::setup_output(messages);
 
     let settings = Settings {
         window: window::Settings {
@@ -33,6 +30,4 @@ fn main() {
     };
 
     App::run(settings).unwrap();
-
-    io_thread.join().unwrap();
 }

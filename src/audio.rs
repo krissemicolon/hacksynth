@@ -15,14 +15,6 @@ impl Audio {
     }
 }
 
-pub fn test_output(midi_out: Arc<SegQueue<MidiMsg>>) {
-    loop {
-        if let Some(MidiMsg::ChannelVoice { channel: _, msg }) = midi_out.pop() {
-            println!("{:?}", msg);
-        }
-    }
-}
-
 pub struct Oscillator {
     detune: f64,
 }
