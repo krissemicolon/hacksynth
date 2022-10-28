@@ -1,10 +1,11 @@
 use midir::{MidiInput, MidiInputPort};
 
-pub fn get_midi_device<'a>() -> Option<MidiInputPort> {
-    let midi_in: MidiInput = match MidiInput::new("midir reading input") {
+pub fn get_midi_device<'a>() -> Option<(MidiInputPort, MidiInput)> {
+    let mut midi_in: MidiInput = match MidiInput::new("midir reading input") {
         Ok(midi_in) => midi_in,
         Err(_) => return None,
     };
+    midi_in.ignore(midir::Ignore::None);
     let midi_in_ports = midi_in.ports();
 
     for port in &midi_in_ports {
@@ -15,5 +16,5 @@ pub fn get_midi_device<'a>() -> Option<MidiInputPort> {
         return None;
     }
 
-    Some(midi_in_ports[0].clone())
+    Some((midi_in_ports[0].clone(), midi_in))
 }

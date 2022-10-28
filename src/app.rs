@@ -43,6 +43,11 @@ impl Sandbox for App {
     }
 
     fn update(&mut self, event: Message) {
+        println!("{}", self.audio.midi_queue.len());
+        while let Some(ev) = self.audio.midi_queue.pop() {
+            println!("{:?}\n\n", ev);
+        }
+
         match event {
             Message::VSliderDB(normal) => {
                 let value = self.fader_range.unmap_to_value(normal);
