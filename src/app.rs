@@ -70,7 +70,7 @@ impl Sandbox for App {
                     Column::new()
                         .spacing(20)
                         .padding(20)
-                        .align_items(Alignment::Center)
+                        .align_items(Alignment::Start)
                         .push(fader_widget),
                 ),
         ))
@@ -114,7 +114,7 @@ impl Sandbox for App {
                     Column::new()
                         .spacing(20)
                         .padding(20)
-                        .align_items(Alignment::Center)
+                        .align_items(Alignment::End)
                         .push(fader_widget3),
                 ),
         ))
