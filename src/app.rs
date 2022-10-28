@@ -9,8 +9,8 @@ pub enum Message {
     VSliderDB(Normal),
 }
 
-pub struct App {
-    audio: Audio,
+pub struct App <'a> {
+    audio: 'a Audio,
 
     fader_range: LogDBRange,
     fader_state: v_slider::State,
