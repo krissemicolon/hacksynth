@@ -66,7 +66,7 @@ impl Sandbox for App {
 
         let oscillators_container = Container::new(Container::new(
             Row::new()
-                .align_items(Alignment::Center)
+                .align_items(Alignment::Start)
                 .push(Image::new(image::Handle::from_path(format!(
                     "{}/assets/oscillators_text.png",
                     env!("CARGO_MANIFEST_DIR")
@@ -79,7 +79,7 @@ impl Sandbox for App {
                         .push(fader_widget),
                 ),
         ))
-        .align_x(iced::alignment::Horizontal::Center)
+        .align_x(iced::alignment::Horizontal::Left)
         .width(Length::Units(214))
         .height(Length::Units(465))
         .max_width(214)
@@ -97,11 +97,11 @@ impl Sandbox for App {
                     Column::new()
                         .spacing(20)
                         .padding(20)
-                        .align_items(Alignment::Center)
+                        .align_items(Alignment::Start)
                         .push(fader_widget2),
                 ),
         ))
-        .align_x(iced::alignment::Horizontal::Center)
+        .align_x(iced::alignment::Horizontal::Left)
         .width(Length::Units(214))
         .height(Length::Units(465))
         .max_width(214)
@@ -110,7 +110,7 @@ impl Sandbox for App {
 
         let lfos_container = Container::new(Container::new(
             Row::new()
-                .align_items(Alignment::Center)
+                .align_items(Alignment::End)
                 .push(Image::new(image::Handle::from_path(format!(
                     "{}/assets/lfos_text.png",
                     env!("CARGO_MANIFEST_DIR")
@@ -119,11 +119,11 @@ impl Sandbox for App {
                     Column::new()
                         .spacing(20)
                         .padding(20)
-                        .align_items(Alignment::End)
+                        .align_items(Alignment::Start)
                         .push(fader_widget3),
                 ),
         ))
-        .align_x(iced::alignment::Horizontal::Center)
+        .align_x(iced::alignment::Horizontal::Left)
         .style(styling::LFOsContainer)
         .width(Length::Units(214))
         .height(Length::Units(465))
