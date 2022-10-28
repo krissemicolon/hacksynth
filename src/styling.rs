@@ -34,3 +34,14 @@ impl container::StyleSheet for LFOsContainer {
         }
     }
 }
+
+pub struct OscillatorContainer;
+impl container::StyleSheet for OscillatorContainer {
+    fn style(&self) -> container::Style {
+        container::Style {
+            text_color: util::hex_to_color("#000000"),
+            background: Some(Background::Color(util::hex_to_color("#c1c1c1").unwrap())),
+            ..container::Style::default()
+        }
+    }
+}
