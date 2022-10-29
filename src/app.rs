@@ -220,14 +220,50 @@ impl Sandbox for App {
             || None,
         );
 
+        let osc2_attack = Knob::new(
+            &mut self.osc2_attack_state,
+            Message::Attack_osc2,
+            || None,
+            || None,
+        );
+
+        let osc2_decay = Knob::new(
+            &mut self.osc2_decay_state,
+            Message::Decay_osc2,
+            || None,
+            || None,
+        );
+
+        let osc2_sustain = Knob::new(
+            &mut self.osc2_sustain_state,
+            Message::Sustain_osc2,
+            || None,
+            || None,
+        );
+
+        let osc2_release = Knob::new(
+            &mut self.osc2_release_state,
+            Message::Release_osc2,
+            || None,
+            || None,
+        );
+
         let osc2 = Container::new(
             Column::new()
                 .align_items(Alignment::Center)
+                .spacing(5)
+                .padding(5)
                 .push(Text::new("Oscillator 2").size(12))
                 .push(Text::new(&self.osc2_detune_label).size(12))
                 .push(osc2_detune)
-                .spacing(5)
-                .padding(5),
+                .push(Text::new(&self.osc2_attack_label).size(12))
+                .push(osc2_attack)
+                .push(Text::new(&self.osc2_decay_label).size(12))
+                .push(osc2_decay)
+                .push(Text::new(&self.osc2_sustain_label).size(12))
+                .push(osc2_sustain)
+                .push(Text::new(&self.osc2_release_label).size(12))
+                .push(osc2_release),
         )
         .style(styling::OscillatorContainer)
         .width(Length::Fill);
