@@ -30,8 +30,8 @@ pub enum Message {
 pub struct App {
     midi_msgs: Arc<SegQueue<MidiMsg>>,
     _connection: MidiInputConnection<()>,
-    osc1: RefCell<Oscillator>,
-    osc2: RefCell<Oscillator>,
+    osc1: Oscillator,
+    osc2: Oscillator,
 
     // ui =======
     detune_range: FloatRange,
@@ -84,10 +84,13 @@ impl Sandbox for App {
     }
 
     fn new() -> App {
+        let osc1 = Oscillator::default();
+        let osc2 = Oscillator::default();
+
         let midi_msgs = Arc::new(SegQueue::new());
         // This has to be retained to ensure the connection is not dropped
         let _connection = audio::run_midi(midi_msgs.clone()).unwrap();
-        audio::setup_output(midi_msgs.clone());
+        audio::setup_output(midi_msgs.clone(), Arc::new(vec![Arc::new(osc1.clone()), Arc::new(osc2.clone())]));
 
         let detune_range = FloatRange::new(-100.0, 100.0);
         let adsr_range = FloatRange::new(0.0, 2000.0);
@@ -97,8 +100,8 @@ impl Sandbox for App {
         App {
             midi_msgs,
             _connection,
-            osc1: RefCell::new(Oscillator::default()),
-            osc2: RefCell::new(Oscillator::default()),
+            osc1,
+            osc2,
 
             // ui =======
             detune_range,
@@ -148,61 +151,61 @@ impl Sandbox for App {
         match event {
             Message::DetuneOsc1(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
-                self.osc1.get_mut().detune = value;
+                self.osc1.detune = value;
                 self.osc1_detune_label = format!("Detune\n{:+.1}", value);
                 println!("detune osc1: {value} Hz")
             }
             Message::AttackOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc1.get_mut().adsr.0 = value as f64;
+                self.osc1.adsr.0 = value as f64;
                 self.osc1_attack_label = format!("Attack\n{:.2}", value);
                 println!("attack osc1: {value} ms")
             }
             Message::DecayOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc1.get_mut().adsr.1 = value as f64;
+                self.osc1.adsr.1 = value as f64;
                 self.osc1_decay_label = format!("Decay\n{:.2}", value);
                 println!("decay osc1: {value} ms")
             }
             Message::SustainOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc1.get_mut().adsr.2 = value as f64;
+                self.osc1.adsr.2 = value as f64;
                 self.osc1_sustain_label = format!("Sustain\n{:.2}", value);
                 println!("sustain osc1: {value} ms")
             }
             Message::ReleaseOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc1.get_mut().adsr.3 = value as f64;
+                self.osc1.adsr.3 = value as f64;
                 self.osc1_release_label = format!("Release\n{:.2}", value);
                 println!("release osc1: {value} ms")
             }
             Message::DetuneOsc2(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
-                self.osc2.get_mut().detune = value;
+                self.osc2.detune = value;
                 self.osc2_detune_label = format!("Detune\n{:+.1}", value);
                 println!("detune osc2: {value} Hz")
             }
             Message::AttackOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc2.get_mut().adsr.0 = value as f64;
+                self.osc2.adsr.0 = value as f64;
                 self.osc2_attack_label = format!("Attack\n{:.2}", value);
                 println!("attack osc2: {value} ms")
             }
             Message::DecayOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc2.get_mut().adsr.1 = value as f64;
+                self.osc2.adsr.1 = value as f64;
                 self.osc2_decay_label = format!("Decay\n{:.2}", value);
                 println!("decay osc2: {value} ms")
             }
             Message::SustainOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc2.get_mut().adsr.2 = value as f64;
+                self.osc2.adsr.2 = value as f64;
                 self.osc2_sustain_label = format!("Sustain\n{:.2}", value);
                 println!("sustain osc2: {value} ms")
             }
             Message::ReleaseOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
-                self.osc2.get_mut().adsr.3 = value as f64;
+                self.osc2.adsr.3 = value as f64;
                 self.osc2_release_label = format!("Release\n{:.2}", value);
                 println!("release osc2: {value} ms")
             }

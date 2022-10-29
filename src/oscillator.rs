@@ -1,10 +1,14 @@
+use std::collections::VecDeque;
+
 use fundsp::{
     hacker::{adsr_live, saw, sine, square, triangle},
     prelude::{midi_hz, An, AudioUnit64, Var},
 };
 
+#[derive(Clone)]
 pub struct ADSR(pub f64, pub f64, pub f64, pub f64);
 
+#[derive(Clone)]
 pub enum Waveform {
     Sine,
     Triangle,
@@ -12,6 +16,7 @@ pub enum Waveform {
     Square,
 }
 
+#[derive(Clone)]
 pub struct Oscillator {
     pub waveform: Waveform,
     pub adsr: ADSR,
@@ -38,7 +43,7 @@ impl Oscillator {
         }
     }
 
-    fn generate_note(
+    pub fn generate_note(
         &self,
         note: u8,
         velocity: u8,
@@ -51,7 +56,7 @@ impl Oscillator {
 
         match &self.waveform {
             Waveform::Sine => Box::new(
-                pitch * pitch_bend
+                (pitch + self.detune as f64) * pitch_bend
                     >> sine()
                         * adsr_live(
                             self.adsr.0,
@@ -65,7 +70,7 @@ impl Oscillator {
                         * 2.0,
             ),
             Waveform::Triangle => Box::new(
-                pitch * pitch_bend
+                (pitch + self.detune as f64) * pitch_bend
                     >> triangle()
                         * adsr_live(
                             self.adsr.0,
@@ -79,7 +84,7 @@ impl Oscillator {
                         * 2.0,
             ),
             Waveform::Sawtooth => Box::new(
-                pitch * pitch_bend
+                (pitch + self.detune as f64) * pitch_bend
                     >> saw()
                         * adsr_live(
                             self.adsr.0,
@@ -93,7 +98,7 @@ impl Oscillator {
                         * 2.0,
             ),
             Waveform::Square => Box::new(
-                pitch * pitch_bend
+                (pitch + self.detune as f64) * pitch_bend
                     >> square()
                         * adsr_live(
                             self.adsr.0,
@@ -109,5 +114,9 @@ impl Oscillator {
         }
     }
 
-    pub fn generate_release() {}
+    pub fn release_all(&self, awaiting_release: &mut VecDeque<An<Var<f64>>>) {
+        while let Some(m) = awaiting_release.pop_front() {
+            m.set_value(1.0);
+        }
+    }
 }

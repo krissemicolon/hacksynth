@@ -9,6 +9,8 @@ use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::collections::VecDeque;
 use std::sync::Arc;
 
+use crate::oscillator::Oscillator;
+
 const PITCH_TAG: Tag = 1;
 const FINISHED_TAG: Tag = PITCH_TAG + 1;
 const RELEASE_TAG: Tag = FINISHED_TAG + 1;
@@ -43,7 +45,7 @@ pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputC
     Ok(connection)
 }
 
-pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>) {
+pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Arc<Vec<Arc<Oscillator>>>) {
     let host = cpal::default_host();
     let device = host
         .default_output_device()
@@ -51,13 +53,13 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>) {
     println!("{:?}", device.name());
     let config = device.default_output_config().unwrap();
     match config.sample_format() {
-        SampleFormat::F32 => output_sound::<f32>(midi_out, device, config.into()),
-        SampleFormat::I16 => output_sound::<i16>(midi_out, device, config.into()),
-        SampleFormat::U16 => output_sound::<u16>(midi_out, device, config.into()),
+        SampleFormat::F32 => output_sound::<f32>(oscillators, midi_out, device, config.into()),
+        SampleFormat::I16 => output_sound::<i16>(oscillators, midi_out, device, config.into()),
+        SampleFormat::U16 => output_sound::<u16>(oscillators, midi_out, device, config.into()),
     }
 }
 
-fn output_sound<T: Sample>(midi_out: Arc<SegQueue<MidiMsg>>, device: Device, config: StreamConfig) {
+fn output_sound<T: Sample>(oscillators: Arc<Vec<Arc<Oscillator>>>, midi_out: Arc<SegQueue<MidiMsg>>, device: Device, config: StreamConfig) {
     let sample_rate = config.sample_rate.0 as f64;
     let device = Arc::new(device);
     let config = Arc::new(config);
@@ -71,13 +73,14 @@ fn output_sound<T: Sample>(midi_out: Arc<SegQueue<MidiMsg>>, device: Device, con
                         note: _,
                         velocity: _,
                     } => {
-                        release_all(&mut awaiting_release);
+                        oscillators[0].release_all(&mut awaiting_release);
                     }
                     ChannelVoiceMsg::NoteOn { note, velocity } => {
-                        release_all(&mut awaiting_release);
+                        oscillators[0].release_all(&mut awaiting_release);
                         let releasing = var(RELEASE_TAG, 0.0);
                         awaiting_release.push_back(releasing.clone());
                         start_sound::<T>(
+                            oscillators.clone(),
                             note,
                             velocity,
                             releasing,
@@ -93,28 +96,9 @@ fn output_sound<T: Sample>(midi_out: Arc<SegQueue<MidiMsg>>, device: Device, con
     });
 }
 
-fn create_sound(
-    note: u8,
-    velocity: u8,
-    releasing: An<Var<f64>>,
-    finished: An<Var<f64>>,
-) -> Box<dyn AudioUnit64> {
-    let pitch = midi_hz(note as f64);
-    let volume = velocity as f64 / 127.0;
-    let pitch_bend = var(PITCH_TAG, 1.0);
-    Box::new(
-        pitch * pitch_bend
-            >> saw() * adsr_live(0.1, 0.2, 0.4, 0.2, releasing, finished) * volume * 2.0,
-    )
-}
-
-fn release_all(awaiting_release: &mut VecDeque<An<Var<f64>>>) {
-    while let Some(m) = awaiting_release.pop_front() {
-        m.set_value(1.0);
-    }
-}
 
 fn start_sound<T: Sample>(
+    oscillators: Arc<Vec<Arc<Oscillator>>>,
     note: u8,
     velocity: u8,
     releasing: An<Var<f64>>,
@@ -123,7 +107,8 @@ fn start_sound<T: Sample>(
     config: Arc<StreamConfig>,
 ) {
     let finished = var(FINISHED_TAG, 0.0);
-    let mut sound = create_sound(note, velocity, releasing, finished.clone());
+    let pitch_bend = var(PITCH_TAG, 1.0);
+    let mut sound = oscillators[0].generate_note(note, velocity, releasing, finished.clone(), pitch_bend);
     sound.reset(Some(sample_rate));
     let mut next_value = move || sound.get_stereo();
     let channels = config.channels as usize;
