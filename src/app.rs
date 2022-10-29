@@ -199,16 +199,49 @@ impl Sandbox for App {
                 .spacing(5)
                 .padding(5)
                 .push(Text::new("Oscillator 1").size(12))
-                .push(Text::new(&self.osc1_detune_label).size(12))
-                .push(osc1_detune)
-                .push(Text::new(&self.osc1_attack_label).size(12))
-                .push(osc1_attack)
-                .push(Text::new(&self.osc1_decay_label).size(12))
-                .push(osc1_decay)
-                .push(Text::new(&self.osc1_sustain_label).size(12))
-                .push(osc1_sustain)
-                .push(Text::new(&self.osc1_release_label).size(12))
-                .push(osc1_release),
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                    .push(
+                        Column::new()
+                            .push(Text::new(&self.osc1_detune_label).size(12))
+                            .push(osc1_detune),
+                    ),
+                )
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc1_attack_label).size(12))
+                                .push(osc1_attack),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc1_decay_label).size(12))
+                                .push(osc1_decay),
+                        ),
+                )
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc1_sustain_label).size(12))
+                                .push(osc1_sustain),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc1_release_label).size(12))
+                                .push(osc1_release),
+                        ),
+                ),
         )
         .style(styling::OscillatorContainer)
         .width(Length::Fill);
@@ -254,16 +287,49 @@ impl Sandbox for App {
                 .spacing(5)
                 .padding(5)
                 .push(Text::new("Oscillator 2").size(12))
-                .push(Text::new(&self.osc2_detune_label).size(12))
-                .push(osc2_detune)
-                .push(Text::new(&self.osc2_attack_label).size(12))
-                .push(osc2_attack)
-                .push(Text::new(&self.osc2_decay_label).size(12))
-                .push(osc2_decay)
-                .push(Text::new(&self.osc2_sustain_label).size(12))
-                .push(osc2_sustain)
-                .push(Text::new(&self.osc2_release_label).size(12))
-                .push(osc2_release),
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                    .push(
+                        Column::new()
+                            .push(Text::new(&self.osc2_detune_label).size(12))
+                            .push(osc2_detune),
+                    ),
+                )
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc2_attack_label).size(12))
+                                .push(osc2_attack),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc2_decay_label).size(12))
+                                .push(osc2_decay),
+                        ),
+                )
+                .push(
+                    Row::new()
+                        .spacing(8)
+                        .width(Length::Fill)
+                        .align_items(Alignment::Center)
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc2_sustain_label).size(12))
+                                .push(osc2_sustain),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc2_release_label).size(12))
+                                .push(osc2_release),
+                        ),
+                ),
         )
         .style(styling::OscillatorContainer)
         .width(Length::Fill);
