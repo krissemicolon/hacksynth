@@ -1,4 +1,4 @@
-use std::{collections::VecDeque};
+use std::collections::VecDeque;
 
 use fundsp::{
     hacker::{adsr_live, saw, sine, square, triangle},
@@ -8,12 +8,42 @@ use fundsp::{
 #[derive(Clone)]
 pub struct ADSR(pub f64, pub f64, pub f64, pub f64);
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Waveform {
     Sine,
     Triangle,
     Sawtooth,
     Square,
+}
+
+impl Waveform {
+    pub const ALL: [Waveform; 4] = [
+        Waveform::Sine,
+        Waveform::Triangle,
+        Waveform::Sawtooth,
+        Waveform::Square,
+    ];
+}
+
+impl Default for Waveform {
+    fn default() -> Waveform {
+        Waveform::Sine
+    }
+}
+
+impl std::fmt::Display for Waveform {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Waveform::Sine => "Sine",
+                Waveform::Triangle => "Triangle",
+                Waveform::Sawtooth => "Sawtooth",
+                Waveform::Square => "Square"
+            }
+        )
+    }
 }
 
 #[derive(Clone)]
@@ -53,8 +83,6 @@ impl Oscillator {
     ) -> Box<dyn AudioUnit64> {
         let pitch = midi_hz(note as f64);
         let volume = velocity as f64 / 127.0;
-
-        println!("== {} ==", self.detune);
 
         match &self.waveform {
             Waveform::Sine => Box::new(

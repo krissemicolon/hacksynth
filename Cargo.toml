@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-iced = { version = "0.4.2", features = ["image"] }
+iced = { version = "0.4.2", features = ["image", "pure"] }
 iced_audio = "0.8"
 fundsp = { git = "https://github.com/SamiPerttu/fundsp" }
 cpal = "0.14.0"

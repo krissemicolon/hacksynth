@@ -1,22 +1,30 @@
-use std::{sync::{Arc, RwLock}, cell::RefCell};
+use std::cell::RefCell;
+use std::sync::{Arc, RwLock};
 
+use crate::{
+    audio,
+    oscillator::{Oscillator, Waveform, ADSR},
+    styling,
+};
 use crossbeam_queue::SegQueue;
 use iced::{
-    image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox, Text,
+    image, pick_list, Alignment, Column, Container, Element, Image, Length, PickList, Row, Sandbox,
+    Text,
 };
 use iced_audio::{knob, FloatRange, FreqRange, Knob, Normal};
 use midi_msg::MidiMsg;
 use midir::MidiInputConnection;
-use crate::{styling, audio, oscillator::{Oscillator, ADSR}};
 
 #[derive(Debug, Clone)]
 pub enum Message {
     DetuneOsc1(Normal),
+    WaveformOsc1Selected(Waveform),
     AttackOsc1(Normal),
     DecayOsc1(Normal),
     SustainOsc1(Normal),
     ReleaseOsc1(Normal),
     DetuneOsc2(Normal),
+    WaveformOsc2Selected(Waveform),
     AttackOsc2(Normal),
     DecayOsc2(Normal),
     SustainOsc2(Normal),
@@ -42,6 +50,9 @@ pub struct App {
     // osc1
     osc1_detune_state: knob::State,
     osc1_detune_label: String,
+    osc1_waveform_state: pick_list::State<Waveform>,
+    osc1_waveform_selected: Option<Waveform>,
+    osc1_waveform_label: String,
     osc1_attack_state: knob::State,
     osc1_attack_label: String,
     osc1_decay_state: knob::State,
@@ -54,6 +65,9 @@ pub struct App {
     // osc2
     osc2_detune_state: knob::State,
     osc2_detune_label: String,
+    osc2_waveform_state: pick_list::State<Waveform>,
+    osc2_waveform_selected: Option<Waveform>,
+    osc2_waveform_label: String,
     osc2_attack_state: knob::State,
     osc2_attack_label: String,
     osc2_decay_state: knob::State,
@@ -84,7 +98,12 @@ impl Sandbox for App {
     }
 
     fn new() -> App {
-        let osc1 = Arc::new(RwLock::new(Oscillator::new(crate::oscillator::Waveform::Square, ADSR(0.11 ,0.14 ,0.47, 0.63), 0.0, 44100)));
+        let osc1 = Arc::new(RwLock::new(Oscillator::new(
+            crate::oscillator::Waveform::Square,
+            ADSR(0.11, 0.14, 0.47, 0.63),
+            0.0,
+            44100,
+        )));
         let osc2 = Arc::new(RwLock::new(Oscillator::default()));
 
         let midi_msgs = Arc::new(SegQueue::new());
@@ -112,11 +131,14 @@ impl Sandbox for App {
             // osc1 state
             osc1_detune_state: knob::State::new(detune_range.default_normal_param()),
             osc1_detune_label: "Detune\n0 Hz".to_string(),
+            osc1_waveform_state: pick_list::State::default(),
+            osc1_waveform_selected: Some(Waveform::Sine),
+            osc1_waveform_label: "Waveform".to_string(),
             osc1_attack_state: knob::State::new(adsr_range.default_normal_param()),
             osc1_attack_label: "Attack\n0 ms".to_string(),
             osc1_decay_state: knob::State::new(adsr_range.default_normal_param()),
             osc1_decay_label: "Decay\n0 ms".to_string(),
-            osc1_sustain_state: knob::State::new(adsr_range.default_normal_param()),
+            osc1_sustain_state: knob::State::new(adsr_range.normal_param(1.0, 0.0)),
             osc1_sustain_label: "Sustain\n0 ms".to_string(),
             osc1_release_state: knob::State::new(adsr_range.default_normal_param()),
             osc1_release_label: "Release\n0 ms".to_string(),
@@ -124,11 +146,14 @@ impl Sandbox for App {
             // osc2 state
             osc2_detune_state: knob::State::new(detune_range.default_normal_param()),
             osc2_detune_label: "Detune\n0 Hz".to_string(),
+            osc2_waveform_state: pick_list::State::default(),
+            osc2_waveform_selected: Some(Waveform::Sine),
+            osc2_waveform_label: "Waveform".to_string(),
             osc2_attack_state: knob::State::new(adsr_range.default_normal_param()),
             osc2_attack_label: "Attack\n0 ms".to_string(),
             osc2_decay_state: knob::State::new(adsr_range.default_normal_param()),
             osc2_decay_label: "Decay\n0 ms".to_string(),
-            osc2_sustain_state: knob::State::new(adsr_range.default_normal_param()),
+            osc2_sustain_state: knob::State::new(adsr_range.normal_param(1.0, 0.0)),
             osc2_sustain_label: "Sustain\n0 ms".to_string(),
             osc2_release_state: knob::State::new(adsr_range.default_normal_param()),
             osc2_release_label: "Release\n0 ms".to_string(),
@@ -154,6 +179,10 @@ impl Sandbox for App {
                 self.osc1.write().unwrap().detune = value;
                 self.osc1_detune_label = format!("Detune\n{:+.1}", value);
                 println!("detune osc1: {value} Hz")
+            }
+            Message::WaveformOsc1Selected(waveform) => {
+                self.osc1_waveform_selected = Some(waveform);
+                self.osc1.write().unwrap().waveform = waveform;
             }
             Message::AttackOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
@@ -184,6 +213,10 @@ impl Sandbox for App {
                 self.osc2.write().unwrap().detune = value;
                 self.osc2_detune_label = format!("Detune\n{:+.1}", value);
                 println!("detune osc2: {value} Hz")
+            }
+            Message::WaveformOsc2Selected(waveform) => {
+                self.osc2_waveform_selected = Some(waveform);
+                self.osc2.write().unwrap().waveform = waveform;
             }
             Message::AttackOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
@@ -240,6 +273,13 @@ impl Sandbox for App {
             || None,
         );
 
+        let osc1_waveform = PickList::new(
+            &mut self.osc1_waveform_state,
+            &Waveform::ALL[..],
+            self.osc1_waveform_selected,
+            Message::WaveformOsc1Selected,
+        );
+
         let osc1_attack = Knob::new(
             &mut self.osc1_attack_state,
             Message::AttackOsc1,
@@ -283,6 +323,11 @@ impl Sandbox for App {
                             Column::new()
                                 .push(Text::new(&self.osc1_detune_label).size(12))
                                 .push(osc1_detune),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc1_waveform_label).size(12))
+                                .push(osc1_waveform),
                         ),
                 )
                 .push(
@@ -328,6 +373,13 @@ impl Sandbox for App {
             || None,
         );
 
+        let osc2_waveform = PickList::new(
+            &mut self.osc2_waveform_state,
+            &Waveform::ALL[..],
+            self.osc2_waveform_selected,
+            Message::WaveformOsc2Selected,
+        );
+
         let osc2_attack = Knob::new(
             &mut self.osc2_attack_state,
             Message::AttackOsc2,
@@ -371,6 +423,11 @@ impl Sandbox for App {
                             Column::new()
                                 .push(Text::new(&self.osc2_detune_label).size(12))
                                 .push(osc2_detune),
+                        )
+                        .push(
+                            Column::new()
+                                .push(Text::new(&self.osc2_waveform_label).size(12))
+                                .push(osc2_waveform),
                         ),
                 )
                 .push(
@@ -467,7 +524,7 @@ impl Sandbox for App {
                                 .push(Text::new(&self.f1_resonance_label).size(12))
                                 .push(f1_resonance),
                         ),
-                )
+                ),
         )
         .style(styling::GroupContainer)
         .width(Length::Fill);
@@ -507,7 +564,7 @@ impl Sandbox for App {
                                 .push(Text::new(&self.f2_resonance_label).size(12))
                                 .push(f2_resonance),
                         ),
-                )
+                ),
         )
         .style(styling::GroupContainer)
         .width(Length::Fill);
