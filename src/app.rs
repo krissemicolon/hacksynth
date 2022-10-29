@@ -1,17 +1,8 @@
-use crossbeam_queue::SegQueue;
 use iced::{
-    image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox, Scrollable, Text,
+    image, Alignment, Column, Container, Element, Image, Length, Row, Sandbox, Text,
 };
-use iced_audio::native::text_marks;
-use iced_audio::text_marks::Group;
-use iced_audio::{
-    knob, tick_marks, v_slider, FloatRange, FreqRange, Knob, LogDBRange, Normal, VSlider,
-};
-use midi_msg::MidiMsg;
-use midir::MidiInputConnection;
-use std::sync::Arc;
-
-use crate::{midi, styling};
+use iced_audio::{knob, FloatRange, FreqRange, Knob, Normal};
+use crate::styling;
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -36,9 +27,6 @@ pub struct App {
     adsr_range: FloatRange,
     freq_range: FreqRange,
     resonance_range: FloatRange,
-
-    // scroll
-    // oscillators_containers_scroll_state:
 
     // osc1
     osc1_detune_state: knob::State,
