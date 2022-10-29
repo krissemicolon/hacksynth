@@ -108,9 +108,14 @@ fn start_sound<T: Sample>(
 ) {
     let finished = var(FINISHED_TAG, 0.0);
     let pitch_bend = var(PITCH_TAG, 1.0);
-    let mut sound = oscillators[0].read().unwrap().generate_note(note, velocity, releasing, finished.clone(), pitch_bend);
-    sound.reset(Some(sample_rate));
-    let mut next_value = move || sound.get_stereo();
+    let mut sound_osc1 = oscillators[0].read().unwrap().generate_note(note, velocity, releasing.clone(), finished.clone(), pitch_bend.clone());
+    let mut sound_osc2 = oscillators[1].read().unwrap().generate_note(note, velocity, releasing.clone(), finished.clone(), pitch_bend.clone());
+    sound_osc1.reset(Some(sample_rate));
+    let mut next_value = move || {
+        let (l1, r1) = sound_osc1.get_stereo();
+        let (l2, r2) = sound_osc2.get_stereo();
+        (l1 + l2, r1 + r2)
+    };
     let channels = config.channels as usize;
     std::thread::spawn(move || {
         let err_fn = |err| eprintln!("an error occurred on stream: {err}");

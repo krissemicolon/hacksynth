@@ -7,7 +7,7 @@ use iced::{
 use iced_audio::{knob, FloatRange, FreqRange, Knob, Normal};
 use midi_msg::MidiMsg;
 use midir::MidiInputConnection;
-use crate::{styling, audio, oscillator::Oscillator};
+use crate::{styling, audio, oscillator::{Oscillator, ADSR}};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -84,7 +84,7 @@ impl Sandbox for App {
     }
 
     fn new() -> App {
-        let osc1 = Arc::new(RwLock::new(Oscillator::default()));
+        let osc1 = Arc::new(RwLock::new(Oscillator::new(crate::oscillator::Waveform::Square, ADSR(0.11 ,0.14 ,0.47, 0.63), 0.0, 44100)));
         let osc2 = Arc::new(RwLock::new(Oscillator::default()));
 
         let midi_msgs = Arc::new(SegQueue::new());
@@ -143,7 +143,7 @@ impl Sandbox for App {
             f2_cutoff_state: knob::State::new(freq_range.default_normal_param()),
             f2_cutoff_label: "Cutoff\n ".to_string(),
             f2_resonance_state: knob::State::new(resonance_range.default_normal_param()),
-            f2_resonance_label: "Resonance\n w".to_string(),
+            f2_resonance_label: "Resonance\n ".to_string(),
         }
     }
 
@@ -547,7 +547,6 @@ impl Sandbox for App {
                         .spacing(20)
                         .padding(20)
                         .align_items(Alignment::Start),
-                    // .push(fader_widget3),
                 ),
         ))
         .align_x(iced::alignment::Horizontal::Left)
