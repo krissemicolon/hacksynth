@@ -35,8 +35,8 @@ impl container::StyleSheet for LFOsContainer {
     }
 }
 
-pub struct OscillatorContainer;
-impl container::StyleSheet for OscillatorContainer {
+pub struct GroupContainer;
+impl container::StyleSheet for GroupContainer {
     fn style(&self) -> container::Style {
         container::Style {
             text_color: util::hex_to_color("#000000"),
