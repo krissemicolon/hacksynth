@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque};
 
 use fundsp::{
     hacker::{adsr_live, saw, sine, square, triangle},
@@ -53,6 +53,8 @@ impl Oscillator {
     ) -> Box<dyn AudioUnit64> {
         let pitch = midi_hz(note as f64);
         let volume = velocity as f64 / 127.0;
+
+        println!("== {} ==", self.detune);
 
         match &self.waveform {
             Waveform::Sine => Box::new(

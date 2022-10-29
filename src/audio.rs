@@ -7,7 +7,7 @@ use fundsp::prelude::{An, AudioUnit64, Tag, Var};
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use midir::{Ignore, MidiInput, MidiInputConnection};
 use std::collections::VecDeque;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use crate::oscillator::Oscillator;
 
@@ -45,7 +45,7 @@ pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputC
     Ok(connection)
 }
 
-pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Arc<Vec<Arc<Oscillator>>>) {
+pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLock<Oscillator>>>) {
     let host = cpal::default_host();
     let device = host
         .default_output_device()
@@ -59,7 +59,7 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Arc<Vec<Arc<O
     }
 }
 
-fn output_sound<T: Sample>(oscillators: Arc<Vec<Arc<Oscillator>>>, midi_out: Arc<SegQueue<MidiMsg>>, device: Device, config: StreamConfig) {
+fn output_sound<T: Sample>(oscillators: Vec<Arc<RwLock<Oscillator>>>, midi_out: Arc<SegQueue<MidiMsg>>, device: Device, config: StreamConfig) {
     let sample_rate = config.sample_rate.0 as f64;
     let device = Arc::new(device);
     let config = Arc::new(config);
@@ -73,10 +73,10 @@ fn output_sound<T: Sample>(oscillators: Arc<Vec<Arc<Oscillator>>>, midi_out: Arc
                         note: _,
                         velocity: _,
                     } => {
-                        oscillators[0].release_all(&mut awaiting_release);
+                        oscillators[0].read().unwrap().release_all(&mut awaiting_release);
                     }
                     ChannelVoiceMsg::NoteOn { note, velocity } => {
-                        oscillators[0].release_all(&mut awaiting_release);
+                        oscillators[0].read().unwrap().release_all(&mut awaiting_release);
                         let releasing = var(RELEASE_TAG, 0.0);
                         awaiting_release.push_back(releasing.clone());
                         start_sound::<T>(
@@ -98,7 +98,7 @@ fn output_sound<T: Sample>(oscillators: Arc<Vec<Arc<Oscillator>>>, midi_out: Arc
 
 
 fn start_sound<T: Sample>(
-    oscillators: Arc<Vec<Arc<Oscillator>>>,
+    oscillators: Vec<Arc<RwLock<Oscillator>>>,
     note: u8,
     velocity: u8,
     releasing: An<Var<f64>>,
@@ -108,7 +108,7 @@ fn start_sound<T: Sample>(
 ) {
     let finished = var(FINISHED_TAG, 0.0);
     let pitch_bend = var(PITCH_TAG, 1.0);
-    let mut sound = oscillators[0].generate_note(note, velocity, releasing, finished.clone(), pitch_bend);
+    let mut sound = oscillators[0].read().unwrap().generate_note(note, velocity, releasing, finished.clone(), pitch_bend);
     sound.reset(Some(sample_rate));
     let mut next_value = move || sound.get_stereo();
     let channels = config.channels as usize;
