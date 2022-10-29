@@ -4,7 +4,6 @@ use iced::{window, Sandbox, Settings};
 use std::sync::Arc;
 
 mod app;
-mod audio;
 mod midi;
 mod styling;
 mod util;
