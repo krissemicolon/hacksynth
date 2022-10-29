@@ -13,7 +13,7 @@ const PITCH_TAG: Tag = 1;
 const FINISHED_TAG: Tag = PITCH_TAG + 1;
 const RELEASE_TAG: Tag = FINISHED_TAG + 1;
 
-pub fn run(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputConnection<()>> {
+pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputConnection<()>> {
     let mut midi_in = MidiInput::new("midir reading input")?;
     midi_in.ignore(Ignore::None);
 
