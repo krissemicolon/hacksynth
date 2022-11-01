@@ -24,8 +24,8 @@ impl container::StyleSheet for FiltersContainer {
     }
 }
 
-pub struct LFOsContainer;
-impl container::StyleSheet for LFOsContainer {
+pub struct EffectsContainer;
+impl container::StyleSheet for EffectsContainer {
     fn style(&self) -> container::Style {
         container::Style {
             text_color: None,

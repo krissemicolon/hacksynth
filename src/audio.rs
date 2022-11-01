@@ -1,15 +1,17 @@
+use crate::oscillator::Oscillator;
+use crate::util;
 use anyhow::bail;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, Sample, SampleFormat, StreamConfig};
 use crossbeam_queue::SegQueue;
-use fundsp::hacker::{adsr_live, midi_hz, saw, var};
+use fundsp::hacker::var;
 use fundsp::prelude::{An, AudioUnit64, Tag, Var};
+use log::info;
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use midir::{Ignore, MidiInput, MidiInputConnection};
+use rayon::prelude::*;
 use std::collections::VecDeque;
 use std::sync::{Arc, RwLock};
-
-use crate::oscillator::Oscillator;
 
 const PITCH_TAG: Tag = 1;
 const FINISHED_TAG: Tag = PITCH_TAG + 1;
@@ -22,11 +24,13 @@ pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputC
     // Get an input port (read from console if multiple are available)
     let in_ports = midi_in.ports();
     let in_port = match in_ports.len() {
-        0 => bail!("Could not detect a MIDI Input Device."),
+        0 => {
+            bail!("Could not detect a MIDI Input Device.")
+        },
         _ => &in_ports[0],
     };
 
-    println!("\nOpening connection");
+    info!("Opening MIDI connection");
     // let in_port_name = midi_in.port_name(in_port)?;
 
     // _conn_in needs to be a named parameter, because it needs to be kept alive until the end of the scope
@@ -50,7 +54,7 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLoc
     let device = host
         .default_output_device()
         .expect("failed to find a default output device");
-    println!("{:?}", device.name());
+    info!("MIDI device: {:?}", device.name().expect("None"));
     let config = device.default_output_config().unwrap();
     match config.sample_format() {
         SampleFormat::F32 => output_sound::<f32>(oscillators, midi_out, device, config.into()),
@@ -59,7 +63,12 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLoc
     }
 }
 
-fn output_sound<T: Sample>(oscillators: Vec<Arc<RwLock<Oscillator>>>, midi_out: Arc<SegQueue<MidiMsg>>, device: Device, config: StreamConfig) {
+fn output_sound<T: Sample>(
+    oscillators: Vec<Arc<RwLock<Oscillator>>>,
+    midi_out: Arc<SegQueue<MidiMsg>>,
+    device: Device,
+    config: StreamConfig,
+) {
     let sample_rate = config.sample_rate.0 as f64;
     let device = Arc::new(device);
     let config = Arc::new(config);
@@ -73,10 +82,20 @@ fn output_sound<T: Sample>(oscillators: Vec<Arc<RwLock<Oscillator>>>, midi_out: 
                         note: _,
                         velocity: _,
                     } => {
-                        oscillators[0].read().unwrap().release_all(&mut awaiting_release);
+                        for oscillator in &oscillators {
+                            oscillator
+                                .read()
+                                .unwrap()
+                                .release_all(&mut awaiting_release);
+                        }
                     }
                     ChannelVoiceMsg::NoteOn { note, velocity } => {
-                        oscillators[0].read().unwrap().release_all(&mut awaiting_release);
+                        for oscillator in &oscillators {
+                            oscillator
+                                .read()
+                                .unwrap()
+                                .release_all(&mut awaiting_release);
+                        }
                         let releasing = var(RELEASE_TAG, 0.0);
                         awaiting_release.push_back(releasing.clone());
                         start_sound::<T>(
@@ -96,7 +115,6 @@ fn output_sound<T: Sample>(oscillators: Vec<Arc<RwLock<Oscillator>>>, midi_out: 
     });
 }
 
-
 fn start_sound<T: Sample>(
     oscillators: Vec<Arc<RwLock<Oscillator>>>,
     note: u8,
@@ -108,14 +126,26 @@ fn start_sound<T: Sample>(
 ) {
     let finished = var(FINISHED_TAG, 0.0);
     let pitch_bend = var(PITCH_TAG, 1.0);
-    let mut sound_osc1 = oscillators[0].read().unwrap().generate_note(note, velocity, releasing.clone(), finished.clone(), pitch_bend.clone());
-    let mut sound_osc2 = oscillators[1].read().unwrap().generate_note(note, velocity, releasing.clone(), finished.clone(), pitch_bend.clone());
-    sound_osc1.reset(Some(sample_rate));
-    let mut next_value = move || {
-        let (l1, r1) = sound_osc1.get_stereo();
-        let (l2, r2) = sound_osc2.get_stereo();
-        (l1 + l2, r1 + r2)
-    };
+
+    let mut sounds: Vec<Box<dyn AudioUnit64>> = oscillators
+        .par_iter()
+        .map(|x| {
+            x.read().unwrap().generate_note(
+                note,
+                velocity,
+                releasing.clone(),
+                finished.clone(),
+                pitch_bend.clone(),
+            )
+        })
+        .collect();
+
+    for sound in &mut sounds {
+        sound.reset(Some(sample_rate));
+    }
+
+    let mut next_value = move || util::combine(sounds.clone());
+
     let channels = config.channels as usize;
     std::thread::spawn(move || {
         let err_fn = |err| eprintln!("an error occurred on stream: {err}");

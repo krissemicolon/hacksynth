@@ -1,3 +1,4 @@
+use fundsp::prelude::AudioUnit64;
 use iced::Color;
 
 pub fn hex_to_color(hex: &str) -> Option<Color> {
@@ -19,4 +20,14 @@ pub fn hex_to_color(hex: &str) -> Option<Color> {
     }
 
     None
+}
+
+pub fn combine(sounds: Vec<Box<dyn AudioUnit64>>) -> (f64, f64) {
+    let (mut l, mut r) = (0.0, 0.0);
+    for mut sound in sounds {
+        let (ls, rs) = sound.get_stereo();
+        l += ls;
+        r += rs;
+    }
+    (l, r)
 }

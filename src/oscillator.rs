@@ -4,6 +4,7 @@ use fundsp::{
     hacker::{adsr_live, saw, sine, square, triangle},
     prelude::{midi_hz, An, AudioUnit64, Var},
 };
+use iced::pick_list::State;
 
 #[derive(Clone)]
 pub struct ADSR(pub f64, pub f64, pub f64, pub f64);
@@ -54,6 +55,17 @@ pub struct Oscillator {
     pub sample_rate: u64,
 }
 
+impl Default for Oscillator {
+    fn default() -> Oscillator {
+        Oscillator {
+            waveform: Waveform::Sine,
+            adsr: ADSR(0.1, 0.2, 0.4, 0.0),
+            detune: 0.0,
+            sample_rate: 44100,
+        }
+    }
+}
+
 impl Oscillator {
     pub fn new(waveform: Waveform, adsr: ADSR, detune: f32, sample_rate: u64) -> Oscillator {
         Oscillator {
@@ -61,15 +73,6 @@ impl Oscillator {
             adsr,
             detune,
             sample_rate,
-        }
-    }
-
-    pub fn default() -> Oscillator {
-        Oscillator {
-            waveform: Waveform::Sine,
-            adsr: ADSR(0.1, 0.2, 0.4, 0.0),
-            detune: 0.0,
-            sample_rate: 44100,
         }
     }
 
