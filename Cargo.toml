@@ -1,7 +1,19 @@
 [package]
 name = "hacksynth"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
+description = "A hacked together synthesizer for yth22"
+
+[package.metadata.bundle]
+name = "Hacksynth"
+identifier = "xyz.krishuber.hacksynth"
+icon = [
+    "assets/icon/32x32.png",
+    "assets/icon/128x128.png",
+    "assets/icon/128x128@2x.png",
+]
+resources = ["assets"]
+copyright = "Copyright (c) Kris Huber 2024. All rights reserved."
 
 [dependencies]
 iced = { version = "0.4.2", features = ["image", "pure"] }
