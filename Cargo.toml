@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 iced = { version = "0.4.2", features = ["image", "pure"] }
 iced_audio = "0.8"
-fundsp = { git = "https://github.com/SamiPerttu/fundsp" }
-cpal = "0.14.0"
+fundsp = { git = "https://github.com/SamiPerttu/fundsp", rev = "8eb6bce56bd171ff3141de58955cd7a93093b051" }
+cpal = "0.14.2"
 anyhow = "1.0.66"
 midir = "0.8.0"
 log = "0.4.17"
@@ -15,3 +15,4 @@ rayon = "1.5.3"
 env_logger = "0.9.1"
 crossbeam-queue = "0.3.6"
 midi-msg = "0.4.0"
+coreaudio-sys = "0.2.15"
