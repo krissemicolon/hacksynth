@@ -26,7 +26,7 @@ pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputC
     let in_port = match in_ports.len() {
         0 => {
             bail!("Could not detect a MIDI Input Device.")
-        },
+        }
         _ => &in_ports[0],
     };
 
@@ -54,7 +54,7 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLoc
     let device = host
         .default_output_device()
         .expect("failed to find a default output device");
-    info!("MIDI device: {:?}", device.name().expect("None"));
+    info!("Audio device: {:?}", device.name().expect("None"));
     let config = device.default_output_config().unwrap();
     match config.sample_format() {
         SampleFormat::F32 => output_sound::<f32>(oscillators, midi_out, device, config.into()),
@@ -127,24 +127,26 @@ fn start_sound<T: Sample>(
     let finished = var(FINISHED_TAG, 0.0);
     let pitch_bend = var(PITCH_TAG, 1.0);
 
-    let mut sounds: Vec<Box<dyn AudioUnit64>> = oscillators
-        .par_iter()
-        .map(|x| {
-            x.read().unwrap().generate_note(
-                note,
-                velocity,
-                releasing.clone(),
-                finished.clone(),
-                pitch_bend.clone(),
-            )
-        })
-        .collect();
+    let mut sound_osc1 = oscillators[0].read().unwrap().generate_note(
+        note,
+        velocity,
+        releasing.clone(),
+        finished.clone(),
+        pitch_bend.clone(),
+    );
+    let mut sound_osc2 = oscillators[1].read().unwrap().generate_note(
+        note,
+        velocity,
+        releasing.clone(),
+        finished.clone(),
+        pitch_bend.clone(),
+    );
 
-    for sound in &mut sounds {
-        sound.reset(Some(sample_rate));
-    }
-
-    let mut next_value = move || util::combine(sounds.clone());
+    let mut next_value = move || {
+        let (l1, r1) = sound_osc1.get_stereo();
+        let (l2, r2) = sound_osc2.get_stereo();
+        (l1 + l2, r1 + r2)
+    };
 
     let channels = config.channels as usize;
     std::thread::spawn(move || {

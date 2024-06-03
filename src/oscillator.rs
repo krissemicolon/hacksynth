@@ -4,7 +4,6 @@ use fundsp::{
     hacker::{adsr_live, saw, sine, square, triangle},
     prelude::{midi_hz, An, AudioUnit64, Var},
 };
-use iced::pick_list::State;
 
 #[derive(Clone)]
 pub struct ADSR(pub f64, pub f64, pub f64, pub f64);
@@ -41,7 +40,7 @@ impl std::fmt::Display for Waveform {
                 Waveform::Sine => "Sine",
                 Waveform::Triangle => "Triangle",
                 Waveform::Sawtooth => "Sawtooth",
-                Waveform::Square => "Square"
+                Waveform::Square => "Square",
             }
         )
     }
