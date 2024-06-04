@@ -1,15 +1,13 @@
 use crate::oscillator::Oscillator;
-use crate::util;
 use anyhow::bail;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Device, Sample, SampleFormat, StreamConfig};
 use crossbeam_queue::SegQueue;
 use fundsp::hacker::var;
-use fundsp::prelude::{An, AudioUnit64, Tag, Var};
+use fundsp::prelude::{An, Tag, Var};
 use log::info;
 use midi_msg::{ChannelVoiceMsg, MidiMsg};
 use midir::{Ignore, MidiInput, MidiInputConnection};
-use rayon::prelude::*;
 use std::collections::VecDeque;
 use std::sync::{Arc, RwLock};
 
@@ -49,7 +47,11 @@ pub fn run_midi(midi_queue: Arc<SegQueue<MidiMsg>>) -> anyhow::Result<MidiInputC
     Ok(connection)
 }
 
-pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLock<Oscillator>>>) {
+pub fn setup_output(
+    midi_out: Arc<SegQueue<MidiMsg>>,
+    oscillators: Vec<Arc<RwLock<Oscillator>>>,
+    filters: Vec<Arc<RwLock<(f64, f64)>>>,
+) {
     let host = cpal::default_host();
     let device = host
         .default_output_device()
@@ -57,26 +59,32 @@ pub fn setup_output(midi_out: Arc<SegQueue<MidiMsg>>, oscillators: Vec<Arc<RwLoc
     info!("Audio device: {:?}", device.name().expect("None"));
     let config = device.default_output_config().unwrap();
     match config.sample_format() {
-        SampleFormat::F32 => output_sound::<f32>(oscillators, midi_out, device, config.into()),
-        SampleFormat::I16 => output_sound::<i16>(oscillators, midi_out, device, config.into()),
-        SampleFormat::U16 => output_sound::<u16>(oscillators, midi_out, device, config.into()),
+        SampleFormat::F32 => {
+            output_sound::<f32>(oscillators, filters, midi_out, device, config.into())
+        }
+        SampleFormat::I16 => {
+            output_sound::<i16>(oscillators, filters, midi_out, device, config.into())
+        }
+        SampleFormat::U16 => {
+            output_sound::<u16>(oscillators, filters, midi_out, device, config.into())
+        }
     }
 }
 
 fn output_sound<T: Sample>(
     oscillators: Vec<Arc<RwLock<Oscillator>>>,
+    filters: Vec<Arc<RwLock<(f64, f64)>>>,
     midi_out: Arc<SegQueue<MidiMsg>>,
     device: Device,
     config: StreamConfig,
 ) {
-    let sample_rate = config.sample_rate.0 as f64;
     let device = Arc::new(device);
     let config = Arc::new(config);
     std::thread::spawn(move || {
         let mut awaiting_release: VecDeque<An<Var<f64>>> = VecDeque::new();
         loop {
             if let Some(MidiMsg::ChannelVoice { channel: _, msg }) = midi_out.pop() {
-                println!("Received {msg:?}");
+                info!("Received {msg:?}");
                 match msg {
                     ChannelVoiceMsg::NoteOff {
                         note: _,
@@ -90,20 +98,14 @@ fn output_sound<T: Sample>(
                         }
                     }
                     ChannelVoiceMsg::NoteOn { note, velocity } => {
-                        for oscillator in &oscillators {
-                            oscillator
-                                .read()
-                                .unwrap()
-                                .release_all(&mut awaiting_release);
-                        }
                         let releasing = var(RELEASE_TAG, 0.0);
                         awaiting_release.push_back(releasing.clone());
                         start_sound::<T>(
                             oscillators.clone(),
+                            filters.clone(),
                             note,
                             velocity,
                             releasing,
-                            sample_rate,
                             device.clone(),
                             config.clone(),
                         );
@@ -117,15 +119,18 @@ fn output_sound<T: Sample>(
 
 fn start_sound<T: Sample>(
     oscillators: Vec<Arc<RwLock<Oscillator>>>,
+    filters: Vec<Arc<RwLock<(f64, f64)>>>,
     note: u8,
     velocity: u8,
     releasing: An<Var<f64>>,
-    sample_rate: f64,
     device: Arc<Device>,
     config: Arc<StreamConfig>,
 ) {
     let finished = var(FINISHED_TAG, 0.0);
     let pitch_bend = var(PITCH_TAG, 1.0);
+
+    let f1 = filters[0].read().unwrap().clone();
+    let f2 = filters[1].read().unwrap().clone();
 
     let mut sound_osc1 = oscillators[0].read().unwrap().generate_note(
         note,
@@ -133,6 +138,7 @@ fn start_sound<T: Sample>(
         releasing.clone(),
         finished.clone(),
         pitch_bend.clone(),
+        f1,
     );
     let mut sound_osc2 = oscillators[1].read().unwrap().generate_note(
         note,
@@ -140,6 +146,7 @@ fn start_sound<T: Sample>(
         releasing.clone(),
         finished.clone(),
         pitch_bend.clone(),
+        f2,
     );
 
     let mut next_value = move || {

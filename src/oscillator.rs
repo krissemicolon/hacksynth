@@ -1,7 +1,7 @@
 use std::collections::VecDeque;
 
 use fundsp::{
-    hacker::{adsr_live, saw, sine, square, triangle},
+    hacker::{adsr_live, lowpass_hz, saw, sine, square, triangle},
     prelude::{midi_hz, An, AudioUnit64, Var},
 };
 
@@ -51,7 +51,6 @@ pub struct Oscillator {
     pub waveform: Waveform,
     pub adsr: ADSR,
     pub detune: f32,
-    pub sample_rate: u64,
 }
 
 impl Default for Oscillator {
@@ -60,18 +59,16 @@ impl Default for Oscillator {
             waveform: Waveform::Sine,
             adsr: ADSR(0.1, 0.2, 0.4, 0.0),
             detune: 0.0,
-            sample_rate: 44100,
         }
     }
 }
 
 impl Oscillator {
-    pub fn new(waveform: Waveform, adsr: ADSR, detune: f32, sample_rate: u64) -> Oscillator {
+    pub fn new(waveform: Waveform, adsr: ADSR, detune: f32) -> Oscillator {
         Oscillator {
             waveform,
             adsr,
             detune,
-            sample_rate,
         }
     }
 
@@ -82,6 +79,7 @@ impl Oscillator {
         releasing: An<Var<f64>>,
         finished: An<Var<f64>>,
         pitch_bend: An<Var<f64>>,
+        filter: (f64, f64),
     ) -> Box<dyn AudioUnit64> {
         let pitch = midi_hz(note as f64);
         let volume = velocity as f64 / 127.0;
@@ -99,7 +97,8 @@ impl Oscillator {
                             finished,
                         )
                         * volume
-                        * 2.0,
+                        * 2.0
+                    >> lowpass_hz(filter.0, filter.1),
             ),
             Waveform::Triangle => Box::new(
                 (pitch + self.detune as f64) * pitch_bend
@@ -113,7 +112,8 @@ impl Oscillator {
                             finished,
                         )
                         * volume
-                        * 2.0,
+                        * 2.0
+                    >> lowpass_hz(filter.0, filter.1),
             ),
             Waveform::Sawtooth => Box::new(
                 (pitch + self.detune as f64) * pitch_bend
@@ -127,7 +127,8 @@ impl Oscillator {
                             finished,
                         )
                         * volume
-                        * 2.0,
+                        * 2.0
+                    >> lowpass_hz(filter.0, filter.1),
             ),
             Waveform::Square => Box::new(
                 (pitch + self.detune as f64) * pitch_bend
@@ -141,7 +142,8 @@ impl Oscillator {
                             finished,
                         )
                         * volume
-                        * 2.0,
+                        * 2.0
+                    >> lowpass_hz(filter.0, filter.1),
             ),
         }
     }

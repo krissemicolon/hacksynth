@@ -1,5 +1,3 @@
-use std::sync::{Arc, RwLock};
-use log::info;
 use crate::{
     audio,
     oscillator::{Oscillator, Waveform, ADSR},
@@ -11,8 +9,10 @@ use iced::{
     Text,
 };
 use iced_audio::{knob, FloatRange, FreqRange, Knob, Normal};
+use log::info;
 use midi_msg::MidiMsg;
 use midir::MidiInputConnection;
+use std::sync::{Arc, RwLock};
 
 #[derive(Debug, Clone)]
 pub enum Message {
@@ -39,8 +39,10 @@ pub struct App {
     _connection: Option<MidiInputConnection<()>>,
     osc1: Arc<RwLock<Oscillator>>,
     osc2: Arc<RwLock<Oscillator>>,
+    f1: Arc<RwLock<(f64, f64)>>,
+    f2: Arc<RwLock<(f64, f64)>>,
 
-    // ui =======
+    // ui from here on out
     detune_range: FloatRange,
     adsr_range: FloatRange,
     freq_range: FreqRange,
@@ -101,14 +103,24 @@ impl Sandbox for App {
             crate::oscillator::Waveform::Square,
             ADSR(0.11, 0.14, 0.47, 0.63),
             0.0,
-            44100,
         )));
-        let osc2 = Arc::new(RwLock::new(Oscillator::default()));
+        let osc2 = Arc::new(RwLock::new(Oscillator::new(
+            crate::oscillator::Waveform::Sine,
+            ADSR(0.11, 0.14, 0.47, 0.63),
+            0.0,
+        )));
+
+        let f1 = Arc::new(RwLock::new((20000.0, 1.0)));
+        let f2 = Arc::new(RwLock::new((20000.0, 1.0)));
 
         let _midi_msgs = Arc::new(SegQueue::new());
         // This has to be retained to ensure the connection is not dropped
         let _connection = audio::run_midi(_midi_msgs.clone()).ok();
-        audio::setup_output(_midi_msgs.clone(), vec![osc1.clone(), osc2.clone()]);
+        audio::setup_output(
+            _midi_msgs.clone(),
+            vec![osc1.clone(), osc2.clone()],
+            vec![f1.clone(), f2.clone()],
+        );
 
         let detune_range = FloatRange::new(-100.0, 100.0);
         let adsr_range = FloatRange::new(0.0, 1.0);
@@ -116,54 +128,66 @@ impl Sandbox for App {
         let resonance_range = FloatRange::new(0.0, 100.0);
 
         // osc1 state
-        let osc1_detune_state = knob::State::new(detune_range.normal_param(osc1.read().unwrap().detune, 0.0));
+        let osc1_detune_state =
+            knob::State::new(detune_range.normal_param(osc1.read().unwrap().detune, 0.0));
         let osc1_detune_label = format!("Detune\n{} Hz", osc1.read().unwrap().detune);
         let osc1_waveform_state = pick_list::State::default();
         let osc1_waveform_selected = Some(osc1.read().unwrap().waveform);
         let osc1_waveform_label = format!("Waveform");
-        let osc1_attack_state = knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.0 as f32, 0.0));
+        let osc1_attack_state =
+            knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.0 as f32, 0.0));
         let osc1_attack_label = format!("Attack\n{} ms", osc1.read().unwrap().adsr.0 as f32);
-        let osc1_decay_state = knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.1 as f32, 0.0));
+        let osc1_decay_state =
+            knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.1 as f32, 0.0));
         let osc1_decay_label = format!("Decay\n{} ms", osc1.read().unwrap().adsr.1 as f32);
-        let osc1_sustain_state = knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.2 as f32, 0.0));
+        let osc1_sustain_state =
+            knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.2 as f32, 0.0));
         let osc1_sustain_label = format!("Sustain\n{} ms", osc1.read().unwrap().adsr.2 as f32);
-        let osc1_release_state = knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.3 as f32, 0.0));
+        let osc1_release_state =
+            knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.3 as f32, 0.0));
         let osc1_release_label = format!("Release\n{} ms", osc1.read().unwrap().adsr.3 as f32);
 
         // osc2 state
-        let osc2_detune_state = knob::State::new(detune_range.normal_param(osc2.read().unwrap().detune, 0.0));
+        let osc2_detune_state =
+            knob::State::new(detune_range.normal_param(osc2.read().unwrap().detune, 0.0));
         let osc2_detune_label = format!("Detune\n{} Hz", osc2.read().unwrap().detune);
         let osc2_waveform_state = pick_list::State::default();
         let osc2_waveform_selected = Some(osc2.read().unwrap().waveform);
         let osc2_waveform_label = format!("Waveform");
-        let osc2_attack_state = knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.0 as f32, 0.0));
+        let osc2_attack_state =
+            knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.0 as f32, 0.0));
         let osc2_attack_label = format!("Attack\n{} ms", osc2.read().unwrap().adsr.0 as f32);
-        let osc2_decay_state = knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.1 as f32, 0.0));
+        let osc2_decay_state =
+            knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.1 as f32, 0.0));
         let osc2_decay_label = format!("Decay\n{} ms", osc2.read().unwrap().adsr.1 as f32);
-        let osc2_sustain_state = knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.2 as f32, 0.0));
+        let osc2_sustain_state =
+            knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.2 as f32, 0.0));
         let osc2_sustain_label = format!("Sustain\n{} ms", osc2.read().unwrap().adsr.2 as f32);
-        let osc2_release_state = knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.3 as f32, 0.0));
+        let osc2_release_state =
+            knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.3 as f32, 0.0));
         let osc2_release_label = format!("Release\n{} ms", osc2.read().unwrap().adsr.3 as f32);
 
         // f1 state
         let f1_cutoff_state = knob::State::new(freq_range.default_normal_param());
-        let f1_cutoff_label = format!("Cutoff\n ");
+        let f1_cutoff_label = format!("Cutoff\n 20000.00 Hz");
         let f1_resonance_state = knob::State::new(resonance_range.default_normal_param());
-        let f1_resonance_label = format!("Resonance\n ");
+        let f1_resonance_label = format!("Resonance\n 0.00 %");
 
         // f2 state
         let f2_cutoff_state = knob::State::new(freq_range.default_normal_param());
-        let f2_cutoff_label = format!("Cutoff\n ");
+        let f2_cutoff_label = format!("Cutoff\n 20000.00 Hz");
         let f2_resonance_state = knob::State::new(resonance_range.default_normal_param());
-        let f2_resonance_label = format!("Resonance\n ");
+        let f2_resonance_label = format!("Resonance\n 0.00 %");
 
         App {
             _midi_msgs,
             _connection,
             osc1,
             osc2,
+            f1,
+            f2,
 
-            // ui =======
+            // ui from here on out
             detune_range,
             adsr_range,
             freq_range,
@@ -218,7 +242,7 @@ impl Sandbox for App {
             Message::DetuneOsc1(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().detune = value;
-                self.osc1_detune_label = format!("Detune\n{:+.1}", value);
+                self.osc1_detune_label = format!("Detune\n{:+.1} Hz", value);
                 info!("detune osc1: {value} Hz")
             }
             Message::WaveformOsc1Selected(waveform) => {
@@ -228,31 +252,31 @@ impl Sandbox for App {
             Message::AttackOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.0 = value as f64;
-                self.osc1_attack_label = format!("Attack\n{:.2}", value);
+                self.osc1_attack_label = format!("Attack\n{:.2} ms", value);
                 info!("attack osc1: {value} ms")
             }
             Message::DecayOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.1 = value as f64;
-                self.osc1_decay_label = format!("Decay\n{:.2}", value);
+                self.osc1_decay_label = format!("Decay\n{:.2} ms", value);
                 info!("decay osc1: {value} ms")
             }
             Message::SustainOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.2 = value as f64;
-                self.osc1_sustain_label = format!("Sustain\n{:.2}", value);
+                self.osc1_sustain_label = format!("Sustain\n{:.2} ms", value);
                 info!("sustain osc1: {value} ms")
             }
             Message::ReleaseOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.3 = value as f64;
-                self.osc1_release_label = format!("Release\n{:.2}", value);
+                self.osc1_release_label = format!("Release\n{:.2} ms", value);
                 info!("release osc1: {value} ms")
             }
             Message::DetuneOsc2(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().detune = value;
-                self.osc2_detune_label = format!("Detune\n{:+.1}", value);
+                self.osc2_detune_label = format!("Detune\n{:+.1} ms", value);
                 info!("detune osc2: {value} Hz")
             }
             Message::WaveformOsc2Selected(waveform) => {
@@ -262,46 +286,50 @@ impl Sandbox for App {
             Message::AttackOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.0 = value as f64;
-                self.osc2_attack_label = format!("Attack\n{:.2}", value);
+                self.osc2_attack_label = format!("Attack\n{:.2} ms", value);
                 info!("attack osc2: {value} ms")
             }
             Message::DecayOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.1 = value as f64;
-                self.osc2_decay_label = format!("Decay\n{:.2}", value);
+                self.osc2_decay_label = format!("Decay\n{:.2} ms", value);
                 info!("decay osc2: {value} ms")
             }
             Message::SustainOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.2 = value as f64;
-                self.osc2_sustain_label = format!("Sustain\n{:.2}", value);
+                self.osc2_sustain_label = format!("Sustain\n{:.2} ms", value);
                 info!("sustain osc2: {value} ms")
             }
             Message::ReleaseOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.3 = value as f64;
-                self.osc2_release_label = format!("Release\n{:.2}", value);
+                self.osc2_release_label = format!("Release\n{:.2} ms", value);
                 info!("release osc2: {value} ms")
             }
             Message::CutoffF1(normal) => {
                 let value = self.freq_range.unmap_to_value(normal);
+                self.f1.write().unwrap().0 = value as f64;
                 self.f1_cutoff_label = format!("Cutoff\n{:.2} Hz", value);
                 info!("cutoff f1: {value} Hz")
             }
             Message::ResonanceF1(normal) => {
                 let value = self.resonance_range.unmap_to_value(normal);
-                self.f1_resonance_label = format!("Resonance\n{:.2}", value);
-                info!("resonance f1: {value} Hz")
+                self.f1.write().unwrap().1 = value as f64;
+                self.f1_resonance_label = format!("Resonance\n{:.2} %", value);
+                info!("resonance f1: {value} %")
             }
             Message::CutoffF2(normal) => {
                 let value = self.freq_range.unmap_to_value(normal);
+                self.f2.write().unwrap().0 = value as f64;
                 self.f2_cutoff_label = format!("Cutoff\n{:.2} Hz", value);
                 info!("cutoff f2: {value} Hz")
             }
             Message::ResonanceF2(normal) => {
                 let value = self.resonance_range.unmap_to_value(normal);
-                self.f2_resonance_label = format!("Resonance\n{:.2}", value);
-                info!("resonance f2: {value} Hz")
+                self.f2.write().unwrap().1 = value as f64;
+                self.f2_resonance_label = format!("Resonance\n{:.2} %", value);
+                info!("resonance f2: {value} %")
             }
         }
     }
