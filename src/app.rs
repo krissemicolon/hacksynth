@@ -276,7 +276,7 @@ impl Sandbox for App {
             Message::DetuneOsc2(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().detune = value;
-                self.osc2_detune_label = format!("Detune\n{:+.1} ms", value);
+                self.osc2_detune_label = format!("Detune\n{:+.1} Hz", value);
                 info!("detune osc2: {value} Hz")
             }
             Message::WaveformOsc2Selected(waveform) => {
