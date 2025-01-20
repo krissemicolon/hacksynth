@@ -44,7 +44,6 @@ cargo bundle --release
 3. Running
 ```sh
 ./target/release/hacksynth
-# or .app
 ```
 or if you built a `.app`
 ```sh
