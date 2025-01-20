@@ -4,7 +4,19 @@
 ![Neubad](assets/neubad.png)
 
 > [!NOTE]  
-> As of now this synth only takes input from MIDI Keyboards. Meaning you need to connect a MIDI Keyboard to play it.
+> As of now this synth only takes input from MIDI Devices. Meaning you need to connect a MIDI Keyboard to play notes.
+
+## Features  
+- **Graphical User Interface**
+- **Velocity-Sensitive MIDI Keyboard Input** – Responds to touch dynamics for expressive playing.  
+- **Dual Oscillators with Selectable Waveforms:**  
+  - Sine  
+  - Triangle  
+  - Sawtooth  
+  - Square  
+- **Two Low-Pass Filters** – Shape your sound.  
+- **Independent ADSR Envelopes per Oscillator** – Fine-tune attack, decay, sustain, and release settings individually.  
+- **Detune Control** – Adjust pitch variations for a richer, wider sound.  
 
 ## Sound Demo
 ![Demo](assets/demo.wav)
