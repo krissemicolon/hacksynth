@@ -3,6 +3,12 @@
 
 ![Neubad](assets/neubad.png)
 
+> [!NOTE]  
+> As of now this synth only takes input from MIDI Keyboards. Meaning you need to connect a MIDI Keyboard to play it.
+
+## Sound Demo
+![Demo](assets/demo.wav)
+
 ## Installation
 You can either download the latest binary in the [releases](https://github.com/krissemicolon/hacksynth/releases) or as described here build from source.
 
@@ -24,9 +30,6 @@ cargo bundle --release
 ```
 
 3. Running
-> [!NOTE]  
-> As of now this synth only takes input from MIDI Keyboards. Meaning you need to use a MIDI Keyboard to play notes.
-
 ```sh
 ./target/release/hacksynth
 # or .app
