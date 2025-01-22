@@ -136,16 +136,16 @@ impl Sandbox for App {
         let osc1_waveform_label = format!("Waveform");
         let osc1_attack_state =
             knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.0 as f32, 0.0));
-        let osc1_attack_label = format!("Attack\n{} ms", osc1.read().unwrap().adsr.0 as f32);
+        let osc1_attack_label = format!("Attack\n{} s", osc1.read().unwrap().adsr.0 as f32);
         let osc1_decay_state =
             knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.1 as f32, 0.0));
-        let osc1_decay_label = format!("Decay\n{} ms", osc1.read().unwrap().adsr.1 as f32);
+        let osc1_decay_label = format!("Decay\n{} s", osc1.read().unwrap().adsr.1 as f32);
         let osc1_sustain_state =
             knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.2 as f32, 0.0));
-        let osc1_sustain_label = format!("Sustain\n{} ms", osc1.read().unwrap().adsr.2 as f32);
+        let osc1_sustain_label = format!("Sustain\n{} s", osc1.read().unwrap().adsr.2 as f32);
         let osc1_release_state =
             knob::State::new(adsr_range.normal_param(osc1.read().unwrap().adsr.3 as f32, 0.0));
-        let osc1_release_label = format!("Release\n{} ms", osc1.read().unwrap().adsr.3 as f32);
+        let osc1_release_label = format!("Release\n{} s", osc1.read().unwrap().adsr.3 as f32);
 
         // osc2 state
         let osc2_detune_state =
@@ -156,16 +156,16 @@ impl Sandbox for App {
         let osc2_waveform_label = format!("Waveform");
         let osc2_attack_state =
             knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.0 as f32, 0.0));
-        let osc2_attack_label = format!("Attack\n{} ms", osc2.read().unwrap().adsr.0 as f32);
+        let osc2_attack_label = format!("Attack\n{} s", osc2.read().unwrap().adsr.0 as f32);
         let osc2_decay_state =
             knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.1 as f32, 0.0));
-        let osc2_decay_label = format!("Decay\n{} ms", osc2.read().unwrap().adsr.1 as f32);
+        let osc2_decay_label = format!("Decay\n{} s", osc2.read().unwrap().adsr.1 as f32);
         let osc2_sustain_state =
             knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.2 as f32, 0.0));
-        let osc2_sustain_label = format!("Sustain\n{} ms", osc2.read().unwrap().adsr.2 as f32);
+        let osc2_sustain_label = format!("Sustain\n{} s", osc2.read().unwrap().adsr.2 as f32);
         let osc2_release_state =
             knob::State::new(adsr_range.normal_param(osc2.read().unwrap().adsr.3 as f32, 0.0));
-        let osc2_release_label = format!("Release\n{} ms", osc2.read().unwrap().adsr.3 as f32);
+        let osc2_release_label = format!("Release\n{} s", osc2.read().unwrap().adsr.3 as f32);
 
         // f1 state
         let f1_cutoff_state = knob::State::new(freq_range.default_normal_param());
@@ -252,26 +252,26 @@ impl Sandbox for App {
             Message::AttackOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.0 = value as f64;
-                self.osc1_attack_label = format!("Attack\n{:.2} ms", value);
-                info!("attack osc1: {value} ms")
+                self.osc1_attack_label = format!("Attack\n{:.2} s", value);
+                info!("attack osc1: {value} s")
             }
             Message::DecayOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.1 = value as f64;
-                self.osc1_decay_label = format!("Decay\n{:.2} ms", value);
-                info!("decay osc1: {value} ms")
+                self.osc1_decay_label = format!("Decay\n{:.2} s", value);
+                info!("decay osc1: {value} s")
             }
             Message::SustainOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.2 = value as f64;
-                self.osc1_sustain_label = format!("Sustain\n{:.2} ms", value);
-                info!("sustain osc1: {value} ms")
+                self.osc1_sustain_label = format!("Sustain\n{:.2} s", value);
+                info!("sustain osc1: {value} s")
             }
             Message::ReleaseOsc1(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc1.write().unwrap().adsr.3 = value as f64;
-                self.osc1_release_label = format!("Release\n{:.2} ms", value);
-                info!("release osc1: {value} ms")
+                self.osc1_release_label = format!("Release\n{:.2} s", value);
+                info!("release osc1: {value} s")
             }
             Message::DetuneOsc2(normal) => {
                 let value = self.detune_range.unmap_to_value(normal);
@@ -286,26 +286,26 @@ impl Sandbox for App {
             Message::AttackOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.0 = value as f64;
-                self.osc2_attack_label = format!("Attack\n{:.2} ms", value);
-                info!("attack osc2: {value} ms")
+                self.osc2_attack_label = format!("Attack\n{:.2} s", value);
+                info!("attack osc2: {value} s")
             }
             Message::DecayOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.1 = value as f64;
-                self.osc2_decay_label = format!("Decay\n{:.2} ms", value);
-                info!("decay osc2: {value} ms")
+                self.osc2_decay_label = format!("Decay\n{:.2} s", value);
+                info!("decay osc2: {value} s")
             }
             Message::SustainOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.2 = value as f64;
-                self.osc2_sustain_label = format!("Sustain\n{:.2} ms", value);
-                info!("sustain osc2: {value} ms")
+                self.osc2_sustain_label = format!("Sustain\n{:.2} s", value);
+                info!("sustain osc2: {value} s")
             }
             Message::ReleaseOsc2(normal) => {
                 let value = self.adsr_range.unmap_to_value(normal);
                 self.osc2.write().unwrap().adsr.3 = value as f64;
-                self.osc2_release_label = format!("Release\n{:.2} ms", value);
-                info!("release osc2: {value} ms")
+                self.osc2_release_label = format!("Release\n{:.2} s", value);
+                info!("release osc2: {value} s")
             }
             Message::CutoffF1(normal) => {
                 let value = self.freq_range.unmap_to_value(normal);
